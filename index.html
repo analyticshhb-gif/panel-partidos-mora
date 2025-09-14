@@ -1,0 +1,3874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Partido Balonmano Mora HHB Analytics v8.12</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* ESTILOS DEL SISTEMA DE PROTECCIÓN */
+        .auth-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .login-form {
+            display: block;
+        }
+
+        .protected-content {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 1rem;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .success {
+            color: #27ae60;
+            margin-top: 1rem;
+            padding: 10px;
+            background: #f2fdf2;
+            border-radius: 5px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .device-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .device-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .device-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .device-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .device-list li:last-child {
+            border-bottom: none;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            margin-top: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        /* ESTILOS DE LA APLICACIÓN DE BALONMANO */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            max-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 12px 15px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .goalkeeper-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gk-selection {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .gk-selection select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid white;
+            color: #333;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            min-width: 80px;
+        }
+
+        .gk-name-input {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+        }
+
+        .gk-name-input input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #333;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            width: 60px;
+        }
+
+        .center-section {
+            text-align: center;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .team-score {
+            text-align: center;
+        }
+
+        .team-name input {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            width: 100px;
+            margin-bottom: 5px;
+        }
+
+        .score {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .vs {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .time-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .time-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .time-btn, .timeout-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.7rem;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+
+        .period-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            font-size: 0.65rem;
+            min-width: 70px;
+            transition: all 0.2s ease;
+        }
+
+        .period-btn.active {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
+        }
+
+        .period-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .time-tracking-toggle {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            font-size: 0.65rem;
+            min-width: 90px;
+            transition: all 0.2s ease;
+            margin-left: 10px;
+        }
+
+        .time-tracking-toggle.enabled {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .time-tracking-toggle:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .timeout-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 180px 1fr 180px;
+            gap: 12px;
+            padding: 12px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 10px;
+            padding: 12px;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        .sidebar.away {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .sidebar h3 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .player-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            padding: 6px;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 0.75rem;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .player-item:hover, .player-item:active {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .player-item.selected {
+            border-color: #e74c3c;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .active-time-control {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .active-time-control:hover {
+            transform: scale(1.1);
+            border-color: #27ae60;
+        }
+
+        .active-time-control.active {
+            background: #27ae60;
+            border-color: #27ae60;
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.5);
+        }
+
+        .active-time-control.active::after {
+            content: '▶';
+            color: white;
+            font-size: 8px;
+            animation: pulse-play 1.5s infinite;
+        }
+
+        .active-time-control.paused {
+            background: #f39c12;
+            border-color: #f39c12;
+        }
+
+        .active-time-control.paused::after {
+            content: '⏸';
+            color: white;
+            font-size: 8px;
+        }
+
+        .active-time-control.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse-play {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .player-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .player-content input {
+            width: 100%;
+            padding: 2px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-top: 2px;
+            font-size: 0.7rem;
+        }
+
+        .playtime-indicator {
+            font-size: 0.65rem;
+            color: #27ae60;
+            font-weight: bold;
+            margin-top: 1px;
+        }
+
+        .playtime-indicator.disabled {
+            opacity: 0.3;
+        }
+
+        .player-stats-mini {
+            font-size: 0.6rem;
+            color: #666;
+            text-align: right;
+            min-width: 25px;
+        }
+
+        .central-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        .current-selection {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            color: white;
+            font-size: 0.75rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .mode-indicator {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .mode-indicator.time-enabled {
+            background: rgba(39, 174, 96, 0.3);
+        }
+
+        .mode-indicator.time-disabled {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .goal-section {
+            text-align: center;
+        }
+
+        .goal-section h3 {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .goal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 45px);
+            gap: 2px;
+            background: #2c3e50;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+        }
+
+        .goal-zone {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border: 2px solid #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            min-height: 40px;
+            touch-action: manipulation;
+        }
+
+        .goal-zone:hover, .goal-zone:active {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(39, 174, 96, 0.4);
+        }
+
+        .goal-zone.selected {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .actions-section {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .actions-section h3 {
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .actions-section h4 {
+            color: white;
+            text-align: center;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.7rem;
+            min-width: 55px;
+            min-height: 36px;
+            touch-action: manipulation;
+        }
+
+        .result-btn { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; }
+        .distance-btn { background: linear-gradient(135deg, #e91e63, #f39c12); color: white; }
+        .line-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; }
+        .action-type-btn { background: linear-gradient(135deg, #e74c3c, #e91e63); color: white; }
+        .situation-btn { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+        .event-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+        .attack-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .register-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+
+        .action-btn:hover, .action-btn:active {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .action-btn.selected {
+            opacity: 1;
+            transform: scale(1.02);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-radius: 1px;
+            margin: 8px 0;
+        }
+
+        .stats-btn {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+            transition: all 0.2s ease;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .stats-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+        }
+
+        .active-players-footer {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 8px 12px;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .active-players-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            padding: 4px;
+        }
+
+        .active-players-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .active-players-content.expanded {
+            max-height: 150px;
+        }
+
+        .active-players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 6px;
+        }
+
+        .active-player-card {
+            background: rgba(39, 174, 96, 0.2);
+            border: 1px solid #27ae60;
+            border-radius: 4px;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        /* ESTILOS DEL MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #ffffff;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .close {
+            color: #666;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .report-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .report-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .report-header .match-info {
+            font-size: 1.2rem;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .report-header .match-details {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .report-content {
+            padding: 30px;
+            line-height: 1.6;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .subsection-title {
+            font-size: 1.1rem;
+            color: #34495e;
+            margin: 20px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+
+        .data-table .number {
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .data-table .percentage {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .percentage.excellent { color: #27ae60; }
+        .percentage.good { color: #3498db; }
+        .percentage.average { color: #f39c12; }
+        .percentage.poor { color: #e74c3c; }
+
+        .comparison-card {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        .team-card {
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .team-card.home {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        }
+
+        .team-card.away {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+        }
+
+        .team-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 6px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .vs-divider {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .goal-grid-visual {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 3px;
+            background: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .goal-zone-visual {
+            background: #95a5a6;
+            border: 2px solid #fff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .goal-zone-visual.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .goal-zone-visual.high-effectiveness {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .goal-zone-visual.low-effectiveness {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .zone-indicator {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .print-btn {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(44, 62, 80, 0.4);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 1001;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .timeline-chart {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .timeline-time {
+            min-width: 50px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .timeline-score {
+            min-width: 50px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .timeline-action {
+            flex: 1;
+            color: #34495e;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .chart-bar {
+            display: inline-block;
+            vertical-align: bottom;
+            width: 30px;
+            margin: 0 2px;
+            background: #3498db;
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Estilos para el header de auth */
+        .auth-header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .auth-header button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .auth-header button:hover {
+            background: #c0392b;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+            }
+            
+            .container {
+                background: white !important;
+                box-shadow: none !important;
+                max-height: none !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .header, .main-content, .active-players-footer {
+                display: none !important;
+            }
+
+            .modal {
+                display: block !important;
+                position: static !important;
+                background: transparent !important;
+            }
+
+            .modal-content {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+                max-height: none !important;
+                overflow: visible !important;
+                box-shadow: none !important;
+            }
+
+            .close, .print-btn {
+                display: none !important;
+            }
+
+            .report-header {
+                background: #f8f9fa !important;
+                color: black !important;
+                border: 2px solid #dee2e6 !important;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 30px;
+            }
+
+            .section-title {
+                color: black !important;
+                border-bottom: 2px solid #dee2e6 !important;
+            }
+
+            .data-table {
+                page-break-inside: avoid;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .data-table thead {
+                background: #f8f9fa !important;
+                color: black !important;
+            }
+
+            .team-card {
+                background: #f8f9fa !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .goal-grid-visual {
+                background: #f8f9fa !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .goal-zone-visual {
+                background: #e9ecef !important;
+                color: black !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        @media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+            .main-content {
+                grid-template-columns: 170px 1fr 170px;
+                gap: 10px;
+            }
+            
+            .sidebar {
+                max-height: 65vh;
+                padding: 10px;
+            }
+            
+            .central-area {
+                max-height: 65vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .sidebar {
+                max-height: none;
+                margin-bottom: 10px;
+            }
+            
+            .header-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sistema de Autenticación -->
+    <div class="auth-container" id="authContainer">
+        <!-- Formulario de Login -->
+        <div id="loginForm" class="login-form">
+            <h1>🔒 Acceso Restringido</h1>
+            <p style="margin-bottom: 20px; color: #666;">HHB ANALYTICS v8.12 - Sistema Protegido</p>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="auth-btn">Ingresar</button>
+            </form>
+            <div id="message"></div>
+        </div>
+
+        <!-- Contenido Protegido -->
+        <div id="protectedContent" class="protected-content">
+            <h2>✅ Acceso Autorizado</h2>
+            
+            <div class="device-info">
+                <h3>Información del Sistema</h3>
+                <p><strong>Tu ID de dispositivo:</strong> <span id="currentDeviceId"></span></p>
+                <p><strong>Dispositivos registrados:</strong> <span id="deviceCount">0</span>/3</p>
+                
+                <h4>Lista de dispositivos:</h4>
+                <ul id="deviceList" class="device-list"></ul>
+            </div>
+
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 1rem 0;">
+                <h3>🎉 ¡Acceso Concedido!</h3>
+                <p>Sistema de análisis de balonmano profesional activado.</p>
+                <p>Dispositivo autorizado para usar HHB Analytics v8.12</p>
+            </div>
+
+            <button id="continueBtn" class="auth-btn" onclick="showHandballApp()">CONTINUAR A LA APLICACIÓN</button>
+            <button id="logoutBtn" class="auth-btn logout-btn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Header de autenticación cuando está logueado -->
+    <div class="auth-header" id="authHeader" style="display: none;">
+        <span>HHB Analytics v8.12 - Dispositivo: <span id="headerDeviceId"></span></span>
+        <button onclick="logout()">Salir</button>
+    </div>
+
+    <!-- Aplicación Principal de Balonmano -->
+    <div class="container" id="handballApp" style="display: none;">
+        <div class="header">
+            <div class="header-content">
+                <div class="goalkeeper-section">
+                    <div class="gk-selection">
+                        <label>Portero Local:</label>
+                        <select id="homeGoalkeeper" onchange="updateGoalkeeper('home', this.value)">
+                            <option value="">Seleccionar...</option>
+                            <option value="GK1">Portero 1</option>
+                            <option value="GK2">Portero 2</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <div class="gk-name-input">
+                            <label>P1:</label>
+                            <input type="text" placeholder="Nombre..." id="homeGK1Name" onchange="updateGoalkeeperName('home', 'GK1', this.value)">
+                        </div>
+                        <div class="gk-name-input">
+                            <label>P2:</label>
+                            <input type="text" placeholder="Nombre..." id="homeGK2Name" onchange="updateGoalkeeperName('home', 'GK2', this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="center-section">
+                    <h1>HHB ANALYTICS V.8.12</h1>
+                    <div class="scoreboard">
+                        <div class="team-score">
+                            <div class="team-name">
+                                <input type="text" placeholder="Equipo Local" id="homeTeamName" onchange="updateTeamName('home', this.value)">
+                            </div>
+                            <div class="score" id="homeScore">0</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team-score">
+                            <div class="team-name">
+                                <input type="text" placeholder="Equipo Visitante" id="awayTeamName" onchange="updateTeamName('away', this.value)">
+                            </div>
+                            <div class="score" id="awayScore">0</div>
+                        </div>
+                    </div>
+                    <div class="time-controls">
+                        <div class="time-display" id="matchTime">00:00</div>
+                        <button class="time-btn" onclick="startTimer()">INICIAR</button>
+                        <button class="time-btn" onclick="pauseTimer()">PAUSAR</button>
+                        <button class="time-btn" onclick="resetTimer()">REINICIAR</button>
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">
+                        <button class="time-btn period-btn active" id="period1Btn" onclick="setPeriod(1)">1er TIEMPO</button>
+                        <button class="time-btn period-btn" id="period2Btn" onclick="setPeriod(2)">2do TIEMPO</button>
+                        <button class="time-btn time-tracking-toggle enabled" id="timeTrackingToggle" onclick="toggleTimeTracking()">CON TIEMPO</button>
+                        <span id="period" style="margin-left: 8px; font-size: 0.8rem; line-height: 32px;">1er Tiempo</span>
+                    </div>
+                </div>
+
+                <div class="goalkeeper-section">
+                    <div class="gk-selection">
+                        <label>Portero Visitante:</label>
+                        <select id="awayGoalkeeper" onchange="updateGoalkeeper('away', this.value)">
+                            <option value="">Seleccionar...</option>
+                            <option value="GK1">Portero 1</option>
+                            <option value="GK2">Portero 2</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <div class="gk-name-input">
+                            <label>P1:</label>
+                            <input type="text" placeholder="Nombre..." id="awayGK1Name" onchange="updateGoalkeeperName('away', 'GK1', this.value)">
+                        </div>
+                        <div class="gk-name-input">
+                            <label>P2:</label>
+                            <input type="text" placeholder="Nombre..." id="awayGK2Name" onchange="updateGoalkeeperName('away', 'GK2', this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeout-section" style="margin-top: 8px; display: flex; justify-content: center; gap: 12px;">
+                <button class="timeout-btn" onclick="requestTimeout('home')">TIME OUT LOCAL</button>
+                <button class="timeout-btn" onclick="requestTimeout('away')">TIME OUT VISITANTE</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar home">
+                <h3>Equipo Local</h3>
+                <div class="player-selector">
+                    <div class="player-item" data-team="home" data-player="1" onclick="selectPlayer('home', 1)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 1</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 1, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="2" onclick="selectPlayer('home', 2)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 2</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 2, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="3" onclick="selectPlayer('home', 3)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 3</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 3, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="4" onclick="selectPlayer('home', 4)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 4</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 4, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="5" onclick="selectPlayer('home', 5)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 5</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 5, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="6" onclick="selectPlayer('home', 6)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 6</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 6, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="7" onclick="selectPlayer('home', 7)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 7</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 7, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="8" onclick="selectPlayer('home', 8)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 8</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 8, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="9" onclick="selectPlayer('home', 9)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 9</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 9, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="10" onclick="selectPlayer('home', 10)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 10</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 10, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="11" onclick="selectPlayer('home', 11)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 11</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 11, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="12" onclick="selectPlayer('home', 12)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 12</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 12, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="13" onclick="selectPlayer('home', 13)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 13</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 13, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="home" data-player="14" onclick="selectPlayer('home', 14)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 14</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('home', 14, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="central-area">
+                <div class="current-selection">
+                    <div class="mode-indicator" id="modeIndicator">
+                        <span id="modeText">MODO: CON TIEMPO</span>
+                    </div>
+                    <strong>Jugador:</strong> <span id="selectedPlayer">Ninguno</span> |
+                    <strong>Equipo:</strong> <span id="selectedTeam">Ninguno</span> |
+                    <strong>Zona:</strong> <span id="selectedZone">Ninguna</span>
+                    <div id="actionSummary"></div>
+                </div>
+
+                <div class="goal-section">
+                    <h3>Portería - Selecciona la zona</h3>
+                    <div class="goal-container">
+                        <div class="goal-grid">
+                            <div class="goal-zone" data-zone="1" onclick="selectZone(1)">1</div>
+                            <div class="goal-zone" data-zone="2" onclick="selectZone(2)">2</div>
+                            <div class="goal-zone" data-zone="3" onclick="selectZone(3)">3</div>
+                            <div class="goal-zone" data-zone="4" onclick="selectZone(4)">4</div>
+                            <div class="goal-zone" data-zone="5" onclick="selectZone(5)">5</div>
+                            <div class="goal-zone" data-zone="6" onclick="selectZone(6)">6</div>
+                            <div class="goal-zone" data-zone="7" onclick="selectZone(7)">7</div>
+                            <div class="goal-zone" data-zone="8" onclick="selectZone(8)">8</div>
+                            <div class="goal-zone" data-zone="9" onclick="selectZone(9)">9</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-section">
+                    <h3>Registro de Acción</h3>
+                    
+                    <div class="action-row">
+                        <button class="action-btn result-btn" onclick="selectAction('result', 'gol')">GOL</button>
+                        <button class="action-btn result-btn" onclick="selectAction('result', 'parada')">PARADA</button>
+                        <button class="action-btn result-btn" onclick="selectAction('result', 'poste-fuera')">POSTE/FUERA</button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="action-row">
+                        <button class="action-btn distance-btn" onclick="selectAction('distance', '6m')">6M</button>
+                        <button class="action-btn distance-btn" onclick="selectAction('distance', '9m')">9M</button>
+                        <button class="action-btn distance-btn" onclick="selectAction('distance', '7m')">7M</button>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'A')">A</button>
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'B')">B</button>
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'C')">C</button>
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'D')">D</button>
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'E')">E</button>
+                        <button class="action-btn line-btn" onclick="selectAction('line', 'F')">F</button>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="action-btn action-type-btn" onclick="selectAction('actionType', 'penetracion')">PENET.</button>
+                        <button class="action-btn action-type-btn" onclick="selectAction('actionType', 'finta')">FINTA</button>
+                        <button class="action-btn action-type-btn" onclick="selectAction('actionType', 'habilidad')">HABIL.</button>
+                        <button class="action-btn action-type-btn" onclick="selectAction('actionType', 'salto')">SALTO</button>
+                        <button class="action-btn action-type-btn" onclick="selectAction('actionType', 'apoyo')">APOYO</button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h4>Situación Numérica</h4>
+                    <div class="action-row">
+                        <button class="action-btn situation-btn" onclick="selectAction('situation', 'superioridad')">SUPER.</button>
+                        <button class="action-btn situation-btn" onclick="selectAction('situation', 'igualdad')">IGUAL.</button>
+                        <button class="action-btn situation-btn" onclick="selectAction('situation', 'inferioridad')">INFER.</button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h4>Eventos Especiales</h4>
+                    <div class="action-row">
+                        <button class="action-btn event-btn" onclick="selectAction('event', 'perdida')">PÉRDIDA</button>
+                        <button class="action-btn event-btn" onclick="selectAction('event', 'pasos-dobles')">PASOS</button>
+                        <button class="action-btn event-btn" onclick="selectAction('event', 'pisar-linea')">LÍNEA</button>
+                        <button class="action-btn event-btn" onclick="selectAction('event', 'exclusion')">EXCL.</button>
+                        <button class="action-btn event-btn" onclick="selectAction('event', 'golpe-franco')">G.FRANCO</button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h4>Tipo de Ataque</h4>
+                    <div class="action-row">
+                        <button class="action-btn attack-btn" onclick="selectAction('attack', 'contraataque')">CONTRA</button>
+                        <button class="action-btn attack-btn" onclick="selectAction('attack', 'posicional')">POSIC.</button>
+                        <button class="action-btn attack-btn" onclick="selectAction('attack', 'campo')">CAMPO</button>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 12px;">
+                        <button class="action-btn register-btn" onclick="registerAction()">REGISTRAR ACCIÓN</button>
+                    </div>
+                </div>
+
+                <button class="stats-btn" onclick="showReport()">GENERAR INFORME PROFESIONAL</button>
+            </div>
+
+            <div class="sidebar away">
+                <h3>Equipo Visitante</h3>
+                <div class="player-selector">
+                    <div class="player-item" data-team="away" data-player="1" onclick="selectPlayer('away', 1)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 1</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 1, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="2" onclick="selectPlayer('away', 2)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 2</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 2, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="3" onclick="selectPlayer('away', 3)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 3</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 3, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="4" onclick="selectPlayer('away', 4)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 4</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 4, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="5" onclick="selectPlayer('away', 5)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 5</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 5, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="6" onclick="selectPlayer('away', 6)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 6</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 6, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="7" onclick="selectPlayer('away', 7)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 7</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 7, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="8" onclick="selectPlayer('away', 8)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 8</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 8, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="9" onclick="selectPlayer('away', 9)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 9</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 9, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="10" onclick="selectPlayer('away', 10)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 10</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 10, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="11" onclick="selectPlayer('away', 11)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 11</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 11, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="12" onclick="selectPlayer('away', 12)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 12</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 12, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="13" onclick="selectPlayer('away', 13)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 13</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 13, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                    <div class="player-item" data-team="away" data-player="14" onclick="selectPlayer('away', 14)">
+                        <div class="active-time-control" onclick="toggleActiveTime(this, event)" title="Control tiempo activo"></div>
+                        <div class="player-content">
+                            <strong>Jugador 14</strong>
+                            <input type="text" placeholder="Nombre..." onchange="updatePlayerName('away', 14, this.value)">
+                            <div class="playtime-indicator">00:00</div>
+                        </div>
+                        <div class="player-stats-mini">G:0 L:0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="active-players-footer">
+            <button class="active-players-toggle" onclick="toggleActivePlayersFooter()">
+                <span>Jugadores Activos</span>
+                <span id="activePlayersCount">(0 activos)</span>
+                <span id="toggleArrow">▼</span>
+            </button>
+            <div class="active-players-content" id="activePlayersContent">
+                <div class="active-players-grid" id="activePlayersGrid">
+                    <div style="text-align: center; opacity: 0.7; grid-column: 1/-1;">
+                        Selecciona jugadores activos usando los círculos
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            
+            <div class="report-header">
+                <h1>INFORME ESTADÍSTICO DEL PARTIDO</h1>
+                <div class="match-info" id="matchInfo">
+                    Equipo Local 0 - 0 Equipo Visitante
+                </div>
+                <div class="match-details" id="matchDetails">
+                    Tiempo: 00:00 - 1er Tiempo | Generado el <span id="reportDate"></span>
+                </div>
+            </div>
+            
+            <div class="report-content" id="reportContent">
+                <!-- El contenido del informe se generará aquí -->
+            </div>
+            
+            <button class="print-btn" onclick="window.print()">IMPRIMIR INFORME</button>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // ===== SISTEMA DE AUTENTICACIÓN =====
+        
+        // Contraseña única válida
+        const validPassword = "HHBMora@25";
+        
+        // Máximo número de dispositivos permitidos
+        const MAX_DEVICES = 4;
+        
+        // Generar ID único para el dispositivo
+        function generateDeviceId() {
+            return 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        }
+        
+        // Obtener o crear ID del dispositivo
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = generateDeviceId();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+        
+        // Obtener dispositivos registrados
+        function getRegisteredDevices() {
+            const devices = localStorage.getItem('registeredDevices');
+            return devices ? JSON.parse(devices) : [];
+        }
+        
+        // Guardar dispositivos registrados
+        function saveRegisteredDevices(devices) {
+            localStorage.setItem('registeredDevices', JSON.stringify(devices));
+        }
+        
+        // Verificar si el dispositivo está registrado
+        function isDeviceRegistered(deviceId) {
+            const devices = getRegisteredDevices();
+            return devices.some(device => device.id === deviceId);
+        }
+        
+        // Registrar nuevo dispositivo
+        function registerDevice(deviceId) {
+            const devices = getRegisteredDevices();
+            
+            if (devices.length >= MAX_DEVICES && !isDeviceRegistered(deviceId)) {
+                return false; // No se puede registrar más dispositivos
+            }
+            
+            if (!isDeviceRegistered(deviceId)) {
+                devices.push({
+                    id: deviceId,
+                    registeredAt: new Date().toLocaleString(),
+                    lastAccess: new Date().toLocaleString()
+                });
+                saveRegisteredDevices(devices);
+            } else {
+                // Actualizar último acceso
+                const device = devices.find(d => d.id === deviceId);
+                if (device) {
+                    device.lastAccess = new Date().toLocaleString();
+                    saveRegisteredDevices(devices);
+                }
+            }
+            
+            return true;
+        }
+        
+        // Mostrar información de dispositivos
+        function displayDeviceInfo() {
+            const currentDeviceId = getDeviceId();
+            const devices = getRegisteredDevices();
+            
+            document.getElementById('currentDeviceId').textContent = currentDeviceId;
+            document.getElementById('headerDeviceId').textContent = currentDeviceId.substring(0, 12) + '...';
+            document.getElementById('deviceCount').textContent = devices.length;
+            
+            const deviceList = document.getElementById('deviceList');
+            deviceList.innerHTML = '';
+            
+            devices.forEach((device, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <strong>Dispositivo ${index + 1}:</strong> ${device.id === currentDeviceId ? '(Este dispositivo)' : ''}<br>
+                    <small>Registrado: ${device.registeredAt} | Último acceso: ${device.lastAccess}</small>
+                `;
+                deviceList.appendChild(li);
+            });
+        }
+        
+        // Verificar contraseña
+        function checkPassword(password) {
+            return password === validPassword;
+        }
+        
+        // Mostrar mensaje
+        function showMessage(text, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${isError ? 'error' : 'success'}">${text}</div>`;
+        }
+        
+        // Mostrar aplicación de balonmano
+        function showHandballApp() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('handballApp').style.display = 'flex';
+            document.getElementById('authHeader').style.display = 'block';
+            
+            // Inicializar la aplicación de balonmano
+            initializeHandballApp();
+        }
+        
+        // Mostrar formulario de login
+        function showLoginForm() {
+            document.getElementById('handballApp').style.display = 'none';
+            document.getElementById('authHeader').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('protectedContent').style.display = 'none';
+            document.getElementById('password').value = '';
+            document.getElementById('message').innerHTML = '';
+        }
+        
+        // Función de logout
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            showLoginForm();
+        }
+        
+        // Verificar si ya está autenticado
+        function checkAuthentication() {
+            const isAuthenticated = sessionStorage.getItem('authenticated');
+            const deviceId = getDeviceId();
+            
+            if (isAuthenticated === 'true' && isDeviceRegistered(deviceId)) {
+                showHandballApp();
+            }
+        }
+        
+        // Event listeners para autenticación
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const deviceId = getDeviceId();
+            
+            if (!checkPassword(password)) {
+                showMessage('❌ Contraseña incorrecta', true);
+                return;
+            }
+            
+            if (!registerDevice(deviceId)) {
+                showMessage('❌ Límite de dispositivos alcanzado (3/3). Este dispositivo no puede acceder.', true);
+                return;
+            }
+            
+            sessionStorage.setItem('authenticated', 'true');
+            showMessage('✅ Acceso concedido', false);
+            
+            setTimeout(() => {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('protectedContent').style.display = 'block';
+                displayDeviceInfo();
+            }, 1000);
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            logout();
+        });
+        
+        // ===== APLICACIÓN DE BALONMANO =====
+        
+        // Variables globales
+        let currentPlayer = null;
+        let currentTeam = null;
+        let currentZone = null;
+        let currentAction = {
+            result: null,
+            distance: null,
+            line: null,
+            actionType: null,
+            situation: null,
+            event: null,
+            attack: null
+        };
+        
+        // NUEVA VARIABLE: Control de seguimiento de tiempo
+        let timeTrackingEnabled = true;
+        
+        let teamNames = { home: 'Equipo Local', away: 'Equipo Visitante' };
+        let playerNames = { home: {}, away: {} };
+        let matchData = { home: {}, away: {} };
+        let scores = { home: 0, away: 0 };
+        let timelineEvents = [];
+        let matchTimer = { minutes: 0, seconds: 0, isRunning: false, period: 1 };
+        let timerInterval = null;
+        let scoreHistory = [];
+        
+        let activeGoalkeepers = { home: null, away: null };
+        let goalkeeperNames = { 
+            home: { GK1: 'Portero 1', GK2: 'Portero 2' },
+            away: { GK1: 'Portero 1', GK2: 'Portero 2' }
+        };
+        let timeoutData = { home: [], away: [] };
+        let goalkeeperStats = {
+            home: { GK1: { saves: 0, goals_against: 0 }, GK2: { saves: 0, goals_against: 0 } },
+            away: { GK1: { saves: 0, goals_against: 0 }, GK2: { saves: 0, goals_against: 0 } }
+        };
+
+        let playerRatings = { home: {}, away: {} };
+        let teamRatings = { home: 0, away: 0 };
+
+        let activePlayers = { home: new Set(), away: new Set() };
+        let playerPlaytime = { home: {}, away: {} };
+        let playTimeStarted = { home: {}, away: {} };
+        let playTimeInterval = null;
+
+        let activePlayersFooterExpanded = false;
+
+        let freeThrowStats = { home: {}, away: {} };
+        let fieldShotStats = { home: 0, away: 0 };
+
+        let playerLineStats = { 
+            home: {}, 
+            away: {} 
+        };
+
+        // Función para inicializar la aplicación de balonmano
+        function initializeHandballApp() {
+            // Inicializar datos
+            for (let i = 1; i <= 14; i++) {
+                playerNames.home[i] = `Jugador ${i}`;
+                playerNames.away[i] = `Jugador ${i}`;
+                matchData.home[i] = [];
+                matchData.away[i] = [];
+                playerRatings.home[i] = 5.0;
+                playerRatings.away[i] = 5.0;
+                
+                playerPlaytime.home[i] = 0;
+                playerPlaytime.away[i] = 0;
+                playTimeStarted.home[i] = null;
+                playTimeStarted.away[i] = null;
+
+                playerLineStats.home[i] = {};
+                playerLineStats.away[i] = {};
+                ['A', 'B', 'C', 'D', 'E', 'F'].forEach(line => {
+                    playerLineStats.home[i][line] = {
+                        total: 0,
+                        goals: 0,
+                        saves: 0,
+                        misses: 0
+                    };
+                    playerLineStats.away[i][line] = {
+                        total: 0,
+                        goals: 0,
+                        saves: 0,
+                        misses: 0
+                    };
+                });
+            }
+
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(line => {
+                freeThrowStats.home[line] = 0;
+                freeThrowStats.away[line] = 0;
+            });
+
+            // Inicializar el actualizador de tiempo de juego
+            startPlayTimeUpdater();
+            
+            // Inicializar el estado de la UI
+            updateTimeTrackingUI();
+        }
+
+        // NUEVA FUNCIÓN: Toggle del seguimiento de tiempo
+        function toggleTimeTracking() {
+            timeTrackingEnabled = !timeTrackingEnabled;
+            updateTimeTrackingUI();
+            
+            if (timeTrackingEnabled) {
+                showNotification('MODO: CON TIEMPO - Requiere marcar jugadores activos');
+            } else {
+                showNotification('MODO: SIN TIEMPO - Análisis rápido activado');
+            }
+        }
+
+        // NUEVA FUNCIÓN: Actualizar la UI según el modo de seguimiento de tiempo
+        function updateTimeTrackingUI() {
+            const toggleBtn = document.getElementById('timeTrackingToggle');
+            const modeIndicator = document.getElementById('modeIndicator');
+            const modeText = document.getElementById('modeText');
+            
+            // Actualizar botón toggle
+            if (timeTrackingEnabled) {
+                toggleBtn.textContent = 'CON TIEMPO';
+                toggleBtn.classList.add('enabled');
+                toggleBtn.classList.remove('disabled');
+                modeIndicator.classList.add('time-enabled');
+                modeIndicator.classList.remove('time-disabled');
+                modeText.textContent = 'MODO: CON TIEMPO';
+            } else {
+                toggleBtn.textContent = 'SIN TIEMPO';
+                toggleBtn.classList.remove('enabled');
+                toggleBtn.classList.add('disabled');
+                modeIndicator.classList.remove('time-enabled');
+                modeIndicator.classList.add('time-disabled');
+                modeText.textContent = 'MODO: SIN TIEMPO';
+            }
+            
+            // Mostrar/ocultar controles de tiempo de jugadores
+            const timeControls = document.querySelectorAll('.active-time-control');
+            const playtimeIndicators = document.querySelectorAll('.playtime-indicator');
+            
+            timeControls.forEach(control => {
+                if (timeTrackingEnabled) {
+                    control.classList.remove('disabled');
+                    control.style.pointerEvents = 'auto';
+                } else {
+                    control.classList.add('disabled');
+                    control.style.pointerEvents = 'none';
+                }
+            });
+            
+            playtimeIndicators.forEach(indicator => {
+                if (timeTrackingEnabled) {
+                    indicator.classList.remove('disabled');
+                } else {
+                    indicator.classList.add('disabled');
+                }
+            });
+        }
+
+        // Funciones de actualización de nombres
+        function updateTeamName(team, name) {
+            teamNames[team] = name || (team === 'home' ? 'Equipo Local' : 'Equipo Visitante');
+        }
+
+        function updatePlayerName(team, player, name) {
+            playerNames[team][player] = name || `Jugador ${player}`;
+        }
+
+        function updateGoalkeeperName(team, gkType, name) {
+            goalkeeperNames[team][gkType] = name || (gkType === 'GK1' ? 'Portero 1' : 'Portero 2');
+        }
+
+        function updateGoalkeeper(team, gkType) {
+            activeGoalkeepers[team] = gkType || null;
+        }
+
+        // Funciones de selección
+        function selectPlayer(team, player) {
+            // Limpiar selección anterior
+            document.querySelectorAll('.player-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Seleccionar nuevo jugador
+            currentPlayer = player;
+            currentTeam = team;
+            
+            const selectedItem = document.querySelector(`[data-team="${team}"][data-player="${player}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+            }
+            
+            updateSelectedDisplay();
+        }
+
+        function selectZone(zone) {
+            // Limpiar selección anterior
+            document.querySelectorAll('.goal-zone').forEach(z => z.classList.remove('selected'));
+            
+            // Seleccionar nueva zona
+            currentZone = zone;
+            const selectedZone = document.querySelector(`[data-zone="${zone}"]`);
+            if (selectedZone) {
+                selectedZone.classList.add('selected');
+            }
+            
+            updateSelectedDisplay();
+        }
+
+        function selectAction(type, value) {
+            currentAction[type] = value;
+            
+            const buttonClass = type === 'result' ? 'result-btn' : 
+                              type === 'distance' ? 'distance-btn' : 
+                              type === 'line' ? 'line-btn' : 
+                              type === 'actionType' ? 'action-type-btn' :
+                              type === 'situation' ? 'situation-btn' :
+                              type === 'event' ? 'event-btn' :
+                              type === 'attack' ? 'attack-btn' : '';
+            
+            document.querySelectorAll(`.${buttonClass}`).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            event.target.classList.add('selected');
+            
+            updateActionSummary();
+        }
+
+        // FUNCIÓN MODIFICADA: Funciones de tiempo activo - ahora verifica si el seguimiento de tiempo está habilitado
+        function toggleActiveTime(element, event) {
+            // Prevenir que el evento se propague y seleccione el jugador
+            event.stopPropagation();
+            event.preventDefault();
+            
+            // Si el seguimiento de tiempo está deshabilitado, no hacer nada
+            if (!timeTrackingEnabled) {
+                return;
+            }
+            
+            const playerItem = element.closest('.player-item');
+            const team = playerItem.dataset.team;
+            const playerId = parseInt(playerItem.dataset.player);
+            
+            // Verificar el estado actual del elemento
+            const isCurrentlyActive = element.classList.contains('active');
+            
+            if (isCurrentlyActive) {
+                // DESACTIVAR jugador
+                element.classList.remove('active');
+                element.classList.remove('paused');
+                activePlayers[team].delete(playerId);
+                
+                // Detener conteo de tiempo si estaba activo
+                if (playTimeStarted[team][playerId]) {
+                    const sessionTime = Date.now() - playTimeStarted[team][playerId];
+                    playerPlaytime[team][playerId] += Math.floor(sessionTime / 1000);
+                    playTimeStarted[team][playerId] = null;
+                    updatePlaytimeDisplay(team, playerId);
+                }
+                
+                showNotification(`${playerNames[team][playerId]} - Marcado como INACTIVO`);
+            } else {
+                // ACTIVAR jugador
+                element.classList.add('active');
+                activePlayers[team].add(playerId);
+                
+                // Solo iniciar conteo si el cronómetro está funcionando
+                if (matchTimer.isRunning) {
+                    playTimeStarted[team][playerId] = Date.now();
+                    element.classList.remove('paused');
+                    showNotification(`${playerNames[team][playerId]} - Marcado como ACTIVO y contando tiempo`);
+                } else {
+                    element.classList.add('paused');
+                    showNotification(`${playerNames[team][playerId]} - Marcado como ACTIVO (esperando inicio de cronómetro)`);
+                }
+            }
+            
+            updatePlayerTimeControlStates();
+            updateActivePlayersDisplay();
+            updatePlayerStatsDisplay(team, playerId);
+        }
+
+        function updatePlayerTimeControlStates() {
+            document.querySelectorAll('.active-time-control.active').forEach(control => {
+                if (matchTimer.isRunning) {
+                    control.classList.remove('paused');
+                } else {
+                    control.classList.add('paused');
+                }
+            });
+        }
+
+        function startPlayTimeUpdater() {
+            playTimeInterval = setInterval(() => {
+                if (matchTimer.isRunning && timeTrackingEnabled) {
+                    ['home', 'away'].forEach(team => {
+                        activePlayers[team].forEach(playerId => {
+                            updatePlaytimeDisplay(team, playerId);
+                        });
+                    });
+                    updateActivePlayersDisplay();
+                }
+            }, 1000);
+        }
+
+        function updatePlaytimeDisplay(team, playerId) {
+            const playerItem = document.querySelector(`[data-team="${team}"][data-player="${playerId}"]`);
+            if (playerItem) {
+                const playtimeIndicator = playerItem.querySelector('.playtime-indicator');
+                const totalSeconds = playerPlaytime[team][playerId];
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                playtimeIndicator.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }
+
+        function updatePlayerStatsDisplay(team, playerId) {
+            const playerItem = document.querySelector(`[data-team="${team}"][data-player="${playerId}"]`);
+            if (playerItem) {
+                const statsDisplay = playerItem.querySelector('.player-stats-mini');
+                const goals = matchData[team][playerId].filter(d => d.result === 'gol').length;
+                const shots = matchData[team][playerId].filter(d => d.result && ['gol', 'parada', 'poste-fuera'].includes(d.result)).length;
+                statsDisplay.textContent = `G:${goals} L:${shots}`;
+            }
+        }
+
+        function getCurrentPlaytime(team, playerId) {
+            let totalSeconds = playerPlaytime[team][playerId];
+            
+            if (playTimeStarted[team][playerId] && matchTimer.isRunning) {
+                const currentSessionTime = Date.now() - playTimeStarted[team][playerId];
+                totalSeconds += Math.floor(currentSessionTime / 1000);
+            }
+            
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Funciones de control de tiempo
+        function startTimer() {
+            if (!matchTimer.isRunning) {
+                matchTimer.isRunning = true;
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                // Solo iniciar conteo para jugadores activos si el seguimiento de tiempo está habilitado
+                if (timeTrackingEnabled) {
+                    const now = Date.now();
+                    ['home', 'away'].forEach(team => {
+                        activePlayers[team].forEach(playerId => {
+                            if (!playTimeStarted[team][playerId]) {
+                                playTimeStarted[team][playerId] = now;
+                            }
+                        });
+                    });
+                    showNotification(`Cronómetro iniciado - Los jugadores activos comenzaron a contar tiempo`);
+                } else {
+                    showNotification(`Cronómetro iniciado`);
+                }
+                
+                updatePlayerTimeControlStates();
+            }
+        }
+
+        function pauseTimer() {
+            matchTimer.isRunning = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Solo pausar conteo si el seguimiento de tiempo está habilitado
+            if (timeTrackingEnabled) {
+                ['home', 'away'].forEach(team => {
+                    activePlayers[team].forEach(playerId => {
+                        if (playTimeStarted[team][playerId]) {
+                            const sessionTime = Date.now() - playTimeStarted[team][playerId];
+                            playerPlaytime[team][playerId] += Math.floor(sessionTime / 1000);
+                            playTimeStarted[team][playerId] = null;
+                            updatePlaytimeDisplay(team, playerId);
+                        }
+                    });
+                });
+                showNotification(`Cronómetro pausado - Conteo de tiempo pausado (jugadores siguen marcados como activos)`);
+            } else {
+                showNotification(`Cronómetro pausado`);
+            }
+            
+            updatePlayerTimeControlStates();
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            matchTimer.minutes = 0;
+            matchTimer.seconds = 0;
+            document.getElementById('matchTime').textContent = '00:00';
+            
+            showNotification(`Cronómetro reiniciado`);
+        }
+
+        function setPeriod(period) {
+            matchTimer.period = period;
+            
+            document.getElementById('period1Btn').classList.toggle('active', period === 1);
+            document.getElementById('period2Btn').classList.toggle('active', period === 2);
+            
+            document.getElementById('period').textContent = period === 1 ? '1er Tiempo' : '2do Tiempo';
+            
+            resetTimer();
+            
+            showNotification(`Cambiado a ${period === 1 ? '1er' : '2do'} Tiempo`);
+        }
+
+        function updateTimer() {
+            if (matchTimer.isRunning) {
+                matchTimer.seconds++;
+                if (matchTimer.seconds >= 60) {
+                    matchTimer.seconds = 0;
+                    matchTimer.minutes++;
+                }
+                
+                const timeDisplay = `${String(matchTimer.minutes).padStart(2, '0')}:${String(matchTimer.seconds).padStart(2, '0')}`;
+                document.getElementById('matchTime').textContent = timeDisplay;
+            }
+        }
+
+        function requestTimeout(team) {
+            const currentTime = `${String(matchTimer.minutes).padStart(2, '0')}:${String(matchTimer.seconds).padStart(2, '0')}`;
+            const timeout = {
+                team: team,
+                time: currentTime,
+                period: matchTimer.period,
+                scoreAtTimeout: { home: scores.home, away: scores.away },
+                timestamp: new Date()
+            };
+            
+            timeoutData[team].push(timeout);
+            
+            showNotification(`Time Out solicitado por ${teamNames[team]} - ${currentTime}`);
+        }
+
+        // Funciones de display
+        function updateSelectedDisplay() {
+            const playerSpan = document.getElementById('selectedPlayer');
+            const teamSpan = document.getElementById('selectedTeam');
+            const zoneSpan = document.getElementById('selectedZone');
+            
+            playerSpan.textContent = currentPlayer && currentTeam ? playerNames[currentTeam][currentPlayer] : 'Ninguno';
+            teamSpan.textContent = currentTeam ? teamNames[currentTeam] : 'Ninguno';
+            zoneSpan.textContent = currentZone ? `Zona ${currentZone}` : 'Ninguna';
+            updateActionSummary();
+        }
+
+        function updateActionSummary() {
+            const summary = document.getElementById('actionSummary');
+            let parts = [];
+            if (currentAction.result) parts.push(`${currentAction.result}`);
+            if (currentAction.distance) parts.push(`${currentAction.distance}`);
+            if (currentAction.line) parts.push(`Línea ${currentAction.line}`);
+            if (currentAction.actionType) parts.push(`${currentAction.actionType}`);
+            if (currentAction.situation) parts.push(`${currentAction.situation}`);
+            if (currentAction.event) parts.push(`${currentAction.event}`);
+            if (currentAction.attack) parts.push(`${currentAction.attack}`);
+            
+            summary.innerHTML = parts.length > 0 ? '<br><strong>Datos:</strong> ' + parts.join(' | ') : '';
+        }
+
+        function toggleActivePlayersFooter() {
+            const content = document.getElementById('activePlayersContent');
+            const arrow = document.getElementById('toggleArrow');
+            
+            activePlayersFooterExpanded = !activePlayersFooterExpanded;
+            
+            if (activePlayersFooterExpanded) {
+                content.classList.add('expanded');
+                arrow.textContent = '▲';
+            } else {
+                content.classList.remove('expanded');
+                arrow.textContent = '▼';
+            }
+        }
+
+        function updateActivePlayersDisplay() {
+            const grid = document.getElementById('activePlayersGrid');
+            const count = document.getElementById('activePlayersCount');
+            let html = '';
+            let totalActive = 0;
+            
+            if (timeTrackingEnabled) {
+                ['home', 'away'].forEach(team => {
+                    if (activePlayers[team].size > 0) {
+                        const activeList = Array.from(activePlayers[team]).map(id => {
+                            const timeStr = getCurrentPlaytime(team, id);
+                            totalActive++;
+                            return `
+                                <div class="active-player-card">
+                                    <strong>${playerNames[team][id]}</strong><br>
+                                    <span style="font-size: 0.65rem; opacity: 0.8;">${teamNames[team]}</span><br>
+                                    <span style="color: #27ae60; font-weight: bold; font-size: 0.7rem;">${timeStr}</span>
+                                </div>
+                            `;
+                        }).join('');
+                        html += activeList;
+                    }
+                });
+                
+                count.textContent = `(${totalActive} activos)`;
+                
+                if (html === '') {
+                    html = '<div style="text-align: center; opacity: 0.7; grid-column: 1/-1; font-size: 0.8rem;">Selecciona jugadores activos usando los círculos</div>';
+                }
+            } else {
+                count.textContent = '(seguimiento deshabilitado)';
+                html = '<div style="text-align: center; opacity: 0.7; grid-column: 1/-1; font-size: 0.8rem;">Modo "SIN TIEMPO" - Seguimiento de tiempo deshabilitado</div>';
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // FUNCIÓN MODIFICADA: Función principal de registro de acciones
+        function registerAction() {
+            // En modo "SIN TIEMPO", no requerir selección de jugador para ciertos tipos de acciones
+            if (!timeTrackingEnabled) {
+                // Para eventos de equipo o acciones generales, permitir registro sin jugador específico
+                if (currentAction.event || currentAction.attack || currentAction.situation) {
+                    // Usar un jugador genérico si no se seleccionó ninguno
+                    if (!currentPlayer || !currentTeam) {
+                        currentPlayer = 1;  // Jugador por defecto
+                        currentTeam = 'home';  // Equipo por defecto
+                    }
+                } else if (!currentPlayer || !currentTeam) {
+                    alert('En modo SIN TIEMPO, debes seleccionar un jugador para lanzamientos y goles');
+                    return;
+                }
+            } else {
+                // En modo "CON TIEMPO", requerir selección de jugador
+                if (!currentPlayer || !currentTeam) {
+                    alert('Debes seleccionar un jugador y equipo');
+                    return;
+                }
+            }
+
+            const action = {
+                player: currentPlayer,
+                team: currentTeam,
+                zone: currentZone,
+                result: currentAction.result,
+                distance: currentAction.distance || null,
+                line: currentAction.line || null,
+                actionType: currentAction.actionType || null,
+                situation: currentAction.situation || null,
+                event: currentAction.event || null,
+                attack: currentAction.attack || null,
+                timestamp: new Date(),
+                matchTime: `${String(matchTimer.minutes).padStart(2, '0')}:${String(matchTimer.seconds).padStart(2, '0')}`,
+                period: matchTimer.period,
+                playTimeAtAction: timeTrackingEnabled ? getCurrentPlaytime(currentTeam, currentPlayer) : '00:00'
+            };
+
+            matchData[currentTeam][currentPlayer].push(action);
+            
+            // Actualizar estadísticas por línea
+            if (currentAction.line && currentAction.result && ['gol', 'parada', 'poste-fuera'].includes(currentAction.result)) {
+                const line = currentAction.line;
+                const playerId = currentPlayer;
+                const team = currentTeam;
+                
+                playerLineStats[team][playerId][line].total++;
+                
+                if (currentAction.result === 'gol') {
+                    playerLineStats[team][playerId][line].goals++;
+                } else if (currentAction.result === 'parada') {
+                    playerLineStats[team][playerId][line].saves++;
+                } else if (currentAction.result === 'poste-fuera') {
+                    playerLineStats[team][playerId][line].misses++;
+                }
+            }
+            
+            // Registrar golpes francos
+            if (currentAction.event === 'golpe-franco' && currentAction.line) {
+                freeThrowStats[currentTeam][currentAction.line]++;
+                showNotification(`Golpe Franco registrado - ${teamNames[currentTeam]} - Línea ${currentAction.line}`);
+            }
+            
+            // Registrar lanzamientos de campo
+            if (currentAction.attack === 'campo') {
+                fieldShotStats[currentTeam]++;
+                showNotification(`Lanzamiento desde campo registrado - ${teamNames[currentTeam]}`);
+            }
+            
+            // Actualizar marcador
+            if (currentAction.result === 'gol') {
+                scores[currentTeam]++;
+                document.getElementById(currentTeam + 'Score').textContent = scores[currentTeam];
+                
+                const rivalTeam = currentTeam === 'home' ? 'away' : 'home';
+                const activeGK = activeGoalkeepers[rivalTeam];
+                if (activeGK && goalkeeperStats[rivalTeam][activeGK]) {
+                    goalkeeperStats[rivalTeam][activeGK].goals_against++;
+                }
+                
+                scoreHistory.push({
+                    time: action.matchTime,
+                    period: action.period,
+                    homeScore: scores.home,
+                    awayScore: scores.away,
+                    scorer: currentTeam
+                });
+            }
+
+            // Actualizar estadísticas de portero
+            if (currentAction.result === 'parada') {
+                const rivalTeam = currentTeam === 'home' ? 'away' : 'home';
+                const activeGK = activeGoalkeepers[rivalTeam];
+                if (activeGK && goalkeeperStats[rivalTeam][activeGK]) {
+                    goalkeeperStats[rivalTeam][activeGK].saves++;
+                }
+            }
+
+            // Registrar estadísticas detalladas del portero
+            if (currentAction.result && ['gol', 'parada', 'poste-fuera'].includes(currentAction.result)) {
+                const rivalTeam = currentTeam === 'home' ? 'away' : 'home';
+                const activeGK = activeGoalkeepers[rivalTeam];
+                if (activeGK) {
+                    if (!goalkeeperStats[rivalTeam][activeGK]) {
+                        goalkeeperStats[rivalTeam][activeGK] = { saves: 0, goals_against: 0 };
+                    }
+                    
+                    if (!goalkeeperStats[rivalTeam][activeGK].detailed) {
+                        goalkeeperStats[rivalTeam][activeGK].detailed = {
+                            total_faced: 0,
+                            poste_fuera: 0,
+                            by_distance: { '6m': {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, '9m': {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, '7m': {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, 'campo': {faced: 0, saves: 0, goals: 0, poste_fuera: 0} },
+                            by_zone: {},
+                            by_shot_type: { penetracion: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, finta: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, habilidad: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, salto: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, apoyo: {faced: 0, saves: 0, goals: 0, poste_fuera: 0} },
+                            by_situation: { superioridad: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, igualdad: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, inferioridad: {faced: 0, saves: 0, goals: 0, poste_fuera: 0} },
+                            by_attack_type: { contraataque: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, posicional: {faced: 0, saves: 0, goals: 0, poste_fuera: 0}, campo: {faced: 0, saves: 0, goals: 0, poste_fuera: 0} }
+                        };
+                        
+                        for (let zone = 1; zone <= 9; zone++) {
+                            goalkeeperStats[rivalTeam][activeGK].detailed.by_zone[zone] = { faced: 0, saves: 0, goals: 0, poste_fuera: 0 };
+                        }
+                    }
+                    
+                    const gkStats = goalkeeperStats[rivalTeam][activeGK].detailed;
+                    
+                    gkStats.total_faced++;
+                    
+                    if (currentAction.result === 'poste-fuera') {
+                        gkStats.poste_fuera++;
+                    }
+                    
+                    // Registrar por distancia
+                    if (currentAction.distance && gkStats.by_distance[currentAction.distance]) {
+                        gkStats.by_distance[currentAction.distance].faced++;
+                        if (currentAction.result === 'gol') {
+                            gkStats.by_distance[currentAction.distance].goals++;
+                        } else if (currentAction.result === 'parada') {
+                            gkStats.by_distance[currentAction.distance].saves++;
+                        } else if (currentAction.result === 'poste-fuera') {
+                            gkStats.by_distance[currentAction.distance].poste_fuera++;
+                        }
+                    }
+                    
+                    // Registrar por zona
+                    if (currentZone && gkStats.by_zone[currentZone]) {
+                        gkStats.by_zone[currentZone].faced++;
+                        if (currentAction.result === 'gol') {
+                            gkStats.by_zone[currentZone].goals++;
+                        } else if (currentAction.result === 'parada') {
+                            gkStats.by_zone[currentZone].saves++;
+                        } else if (currentAction.result === 'poste-fuera') {
+                            gkStats.by_zone[currentZone].poste_fuera++;
+                        }
+                    }
+                    
+                    // Registrar por tipo de lanzamiento
+                    if (currentAction.actionType && gkStats.by_shot_type[currentAction.actionType]) {
+                        gkStats.by_shot_type[currentAction.actionType].faced++;
+                        if (currentAction.result === 'gol') {
+                            gkStats.by_shot_type[currentAction.actionType].goals++;
+                        } else if (currentAction.result === 'parada') {
+                            gkStats.by_shot_type[currentAction.actionType].saves++;
+                        } else if (currentAction.result === 'poste-fuera') {
+                            gkStats.by_shot_type[currentAction.actionType].poste_fuera++;
+                        }
+                    }
+                    
+                    // Registrar por situación numérica
+                    if (currentAction.situation && gkStats.by_situation[currentAction.situation]) {
+                        gkStats.by_situation[currentAction.situation].faced++;
+                        if (currentAction.result === 'gol') {
+                            gkStats.by_situation[currentAction.situation].goals++;
+                        } else if (currentAction.result === 'parada') {
+                            gkStats.by_situation[currentAction.situation].saves++;
+                        } else if (currentAction.result === 'poste-fuera') {
+                            gkStats.by_situation[currentAction.situation].poste_fuera++;
+                        }
+                    }
+                    
+                    // Registrar por tipo de ataque
+                    if (currentAction.attack && gkStats.by_attack_type[currentAction.attack]) {
+                        gkStats.by_attack_type[currentAction.attack].faced++;
+                        if (currentAction.result === 'gol') {
+                            gkStats.by_attack_type[currentAction.attack].goals++;
+                        } else if (currentAction.result === 'parada') {
+                            gkStats.by_attack_type[currentAction.attack].saves++;
+                        } else if (currentAction.result === 'poste-fuera') {
+                            gkStats.by_attack_type[currentAction.attack].poste_fuera++;
+                        }
+                    }
+                }
+            }
+
+            updatePlayerRating(currentTeam, currentPlayer, action);
+            updateTeamRatings();
+
+            timelineEvents.push({
+                time: action.matchTime,
+                period: action.period,
+                team: currentTeam,
+                player: playerNames[currentTeam][currentPlayer],
+                action: formatActionForTimeline(action)
+            });
+
+            const actionDetails = formatActionDetails(action);
+            showNotification(`${teamNames[currentTeam]} - ${playerNames[currentTeam][currentPlayer]} - ${actionDetails}`);
+            
+            updatePlayerStatsDisplay(currentTeam, currentPlayer);
+            clearSelections();
+        }
+
+        // Funciones de cálculo de estadísticas
+        function calculateTeamStats(team) {
+            let shots = 0;
+            let goals = 0;
+            let events = 0;
+            
+            let attackTypes = {
+                'posicional': { shots: 0, goals: 0 },
+                'contraataque': { shots: 0, goals: 0 },
+                'campo': { shots: 0, goals: 0 }
+            };
+            
+            for (let i = 1; i <= 14; i++) {
+                matchData[team][i].forEach(action => {
+                    if (action.result && ['gol', 'parada', 'poste-fuera'].includes(action.result) && 
+                        action.event !== 'golpe-franco') {
+                        
+                        shots++;
+                        if (action.result === 'gol') goals++;
+                        
+                        const attackType = action.attack || 'posicional';
+                        if (attackTypes[attackType]) {
+                            attackTypes[attackType].shots++;
+                            if (action.result === 'gol') {
+                                attackTypes[attackType].goals++;
+                            }
+                        }
+                    }
+                    if (action.event) events++;
+                });
+            }
+            
+            let effectivenessByType = {};
+            let totalWeight = 0;
+            
+            Object.keys(attackTypes).forEach(type => {
+                const typeData = attackTypes[type];
+                if (typeData.shots > 0) {
+                    effectivenessByType[type] = (typeData.goals / typeData.shots) * 100;
+                    totalWeight += typeData.shots;
+                } else {
+                    effectivenessByType[type] = 0;
+                }
+            });
+            
+            let weightedEffectiveness = 0;
+            if (totalWeight > 0) {
+                Object.keys(attackTypes).forEach(type => {
+                    const typeData = attackTypes[type];
+                    if (typeData.shots > 0) {
+                        const weight = typeData.shots / totalWeight;
+                        weightedEffectiveness += effectivenessByType[type] * weight;
+                    }
+                });
+            }
+            
+            const effectiveness = weightedEffectiveness.toFixed(1);
+            
+            return { 
+                shots, 
+                goals, 
+                events, 
+                effectiveness,
+                attackTypes,
+                effectivenessByType,
+                weightedEffectiveness
+            };
+        }
+
+        function getAttackTypeDetails(team) {
+            const stats = calculateTeamStats(team);
+            let details = [];
+            
+            Object.keys(stats.attackTypes).forEach(type => {
+                const typeData = stats.attackTypes[type];
+                const typeName = type === 'posicional' ? 'Posicional' : 
+                                type === 'contraataque' ? 'Contraataque' : 'Campo';
+                
+                if (typeData.shots > 0) {
+                    details.push({
+                        type: typeName,
+                        shots: typeData.shots,
+                        goals: typeData.goals,
+                        effectiveness: stats.effectivenessByType[type].toFixed(1),
+                        weight: ((typeData.shots / stats.shots) * 100).toFixed(1)
+                    });
+                }
+            });
+            
+            return details;
+        }
+
+        function updatePlayerRating(team, player, action) {
+            let rating = playerRatings[team][player];
+            
+            if (action.result === 'gol') {
+                rating += 0.5;
+                if (action.distance === '9m') rating += 0.5;
+                if (action.zone && (action.zone === 1 || action.zone === 3 || action.zone === 7 || action.zone === 9)) {
+                    rating += 0.5;
+                }
+                if (action.attack === 'campo') rating += 0.5;
+                if (action.situation === 'superioridad') rating += 0.5;
+                if (action.situation === 'inferioridad') rating += 0.6;
+            } else if (action.result === 'parada') {
+                rating -= 0.2;
+            } else if (action.result === 'poste-fuera') {
+                rating -= 0.1;
+            }
+
+            if (action.event) {
+                switch(action.event) {
+                    case 'perdida':
+                        rating -= 0.5;
+                        break;
+                    case 'pisar-linea':
+                        rating -= 0.3;
+                        break;
+                    case 'pasos-dobles':
+                        rating -= 0.3;
+                        break;
+                    case 'exclusion':
+                        rating -= 0.2;
+                        break;
+                    case 'golpe-franco':
+                        rating -= 0.1;
+                        break;
+                    default:
+                        rating -= 0.1;
+                        break;
+                }
+            }
+
+            if (timeTrackingEnabled && activePlayers[team].has(player)) {
+                rating += 0.05;
+            }
+
+            playerRatings[team][player] = Math.max(1.0, Math.min(10.0, rating));
+        }
+
+        function updateTeamRatings() {
+            ['home', 'away'].forEach(team => {
+                let totalRating = 0;
+                let activePlayers = 0;
+
+                for (let i = 1; i <= 14; i++) {
+                    if (matchData[team][i].length > 0) {
+                        totalRating += playerRatings[team][i];
+                        activePlayers++;
+                    }
+                }
+
+                teamRatings[team] = activePlayers > 0 ? (totalRating / activePlayers) : 5.0;
+            });
+        }
+
+        function formatActionForTimeline(action) {
+            let parts = [];
+            if (action.result) parts.push(action.result.toUpperCase());
+            if (action.event) parts.push(action.event.toUpperCase());
+            if (action.zone) parts.push(`Zona ${action.zone}`);
+            if (action.distance) parts.push(action.distance);
+            if (action.situation) parts.push(action.situation);
+            if (action.attack) parts.push(action.attack);
+            return parts.join(' - ');
+        }
+
+        function formatActionDetails(action) {
+            let parts = [];
+            if (action.result) parts.push(action.result);
+            if (action.event) parts.push(action.event);
+            if (action.zone) parts.push(`Zona ${action.zone}`);
+            if (action.distance) parts.push(action.distance);
+            if (action.situation) parts.push(action.situation);
+            if (action.attack) parts.push(action.attack);
+            return parts.join(' - ');
+        }
+
+        function clearSelections() {
+            currentZone = null;
+            currentAction = {
+                result: null, distance: null, line: null, actionType: null,
+                situation: null, event: null, attack: null
+            };
+            
+            document.querySelectorAll('.goal-zone').forEach(z => z.classList.remove('selected'));
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            updateSelectedDisplay();
+        }
+
+        // Funciones de estadísticas avanzadas
+        function getPlayerStats(team, player) {
+            const actions = matchData[team][player];
+            const shots = actions.filter(a => a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result) && a.event !== 'golpe-franco').length;
+            const goals = actions.filter(a => a.result === 'gol').length;
+            const freeThrows = actions.filter(a => a.event === 'golpe-franco').length;
+            const fieldShots = actions.filter(a => a.attack === 'campo').length;
+            const effectiveness = shots > 0 ? (goals / shots * 100).toFixed(1) : '0.0';
+            const playtime = timeTrackingEnabled ? getCurrentPlaytime(team, player) : 'N/A';
+            
+            // Eventos especiales
+            const events = {
+                perdida: actions.filter(a => a.event === 'perdida').length,
+                pasos: actions.filter(a => a.event === 'pasos-dobles').length,
+                linea: actions.filter(a => a.event === 'pisar-linea').length,
+                exclusion: actions.filter(a => a.event === 'exclusion').length
+            };
+            
+            // Estadísticas por zona
+            const zoneStats = {};
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(zone => {
+                const zoneActions = actions.filter(a => a.line === zone && a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result));
+                const zoneGoals = actions.filter(a => a.line === zone && a.result === 'gol').length;
+                zoneStats[zone] = {
+                    shots: zoneActions.length,
+                    goals: zoneGoals,
+                    effectiveness: zoneActions.length > 0 ? (zoneGoals / zoneActions.length * 100).toFixed(1) : '0.0'
+                };
+            });
+            
+            // Estadísticas por cuadrante de portería
+            const goalZoneStats = {};
+            for (let i = 1; i <= 9; i++) {
+                const zoneActions = actions.filter(a => a.zone === i && a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result));
+                const zoneGoals = actions.filter(a => a.zone === i && a.result === 'gol').length;
+                goalZoneStats[i] = {
+                    shots: zoneActions.length,
+                    goals: zoneGoals,
+                    effectiveness: zoneActions.length > 0 ? (zoneGoals / zoneActions.length * 100).toFixed(1) : '0.0'
+                };
+            }
+            
+            // Estadísticas por tipo de lanzamiento
+            const shotTypeStats = {};
+            ['penetracion', 'finta', 'habilidad', 'salto', 'apoyo'].forEach(type => {
+                const typeActions = actions.filter(a => a.actionType === type && a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result));
+                const typeGoals = actions.filter(a => a.actionType === type && a.result === 'gol').length;
+                shotTypeStats[type] = {
+                    shots: typeActions.length,
+                    goals: typeGoals,
+                    effectiveness: typeActions.length > 0 ? (typeGoals / typeActions.length * 100).toFixed(1) : '0.0'
+                };
+            });
+            
+            // Estadísticas por tipo de ataque
+            const attackTypeStats = {};
+            ['contraataque', 'posicional', 'campo'].forEach(type => {
+                const typeActions = actions.filter(a => a.attack === type && a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result));
+                const typeGoals = actions.filter(a => a.attack === type && a.result === 'gol').length;
+                attackTypeStats[type] = {
+                    shots: typeActions.length,
+                    goals: typeGoals,
+                    effectiveness: typeActions.length > 0 ? (typeGoals / typeActions.length * 100).toFixed(1) : '0.0'
+                };
+            });
+            
+            // Estadísticas por situación numérica
+            const situationStats = {};
+            ['igualdad', 'superioridad', 'inferioridad'].forEach(situation => {
+                const sitActions = actions.filter(a => a.situation === situation && a.result && ['gol', 'parada', 'poste-fuera'].includes(a.result));
+                const sitGoals = actions.filter(a => a.situation === situation && a.result === 'gol').length;
+                situationStats[situation] = {
+                    shots: sitActions.length,
+                    goals: sitGoals,
+                    effectiveness: sitActions.length > 0 ? (sitGoals / sitActions.length * 100).toFixed(1) : '0.0'
+                };
+            });
+            
+            return {
+                shots,
+                goals,
+                effectiveness,
+                freeThrows,
+                fieldShots,
+                playtime,
+                rating: playerRatings[team][player].toFixed(1),
+                events,
+                zoneStats,
+                goalZoneStats,
+                shotTypeStats,
+                attackTypeStats,
+                situationStats
+            };
+        }
+
+        function getGoalkeeperStats(team, gkType) {
+            const gkStats = goalkeeperStats[team][gkType];
+            if (!gkStats || !gkStats.detailed) {
+                return {
+                    total_faced: 0,
+                    saves: 0,
+                    goals_against: 0,
+                    poste_fuera: 0,
+                    effectiveness: '0.0',
+                    rating: '5.0'
+                };
+            }
+            
+            // CORRECCIÓN: Calcular efectividad de parada (paradas/total_enfrentados)
+            const effectiveness = gkStats.detailed.total_faced > 0 ? 
+                (gkStats.saves / gkStats.detailed.total_faced) * 100 : 0;
+            
+            const rating = Math.max(1, Math.min(10, 5 + (gkStats.saves * 0.3) - (gkStats.goals_against * 0.2)));
+            
+            return {
+                total_faced: gkStats.detailed.total_faced,
+                saves: gkStats.saves,
+                goals_against: gkStats.goals_against,
+                poste_fuera: gkStats.detailed.poste_fuera,
+                effectiveness: effectiveness.toFixed(1),
+                rating: rating.toFixed(1),
+                detailed: gkStats.detailed
+            };
+        }
+
+        function getMVP() {
+            let bestPlayer = null;
+            let bestRating = 0;
+            let bestTeam = null;
+            
+            ['home', 'away'].forEach(team => {
+                for (let i = 1; i <= 14; i++) {
+                    if (matchData[team][i].length > 0) {
+                        const playerStats = getPlayerStats(team, i);
+                        const rating = parseFloat(playerStats.rating);
+                        
+                        if (rating > bestRating) {
+                            bestRating = rating;
+                            bestPlayer = i;
+                            bestTeam = team;
+                        }
+                    }
+                }
+            });
+            
+            if (bestPlayer) {
+                const stats = getPlayerStats(bestTeam, bestPlayer);
+                return {
+                    team: bestTeam,
+                    player: bestPlayer,
+                    name: playerNames[bestTeam][bestPlayer],
+                    teamName: teamNames[bestTeam],
+                    rating: bestRating,
+                    stats: stats
+                };
+            }
+            
+            return null;
+        }
+
+        function getTeamEventStats(team) {
+            let events = {
+                perdida: 0,
+                pasos: 0,
+                linea: 0,
+                exclusion: 0
+            };
+            
+            for (let i = 1; i <= 14; i++) {
+                matchData[team][i].forEach(action => {
+                    if (action.event && events.hasOwnProperty(action.event)) {
+                        events[action.event]++;
+                    } else if (action.event === 'pasos-dobles') {
+                        events.pasos++;
+                    } else if (action.event === 'pisar-linea') {
+                        events.linea++;
+                    }
+                });
+            }
+            
+            return events;
+        }
+
+        function getDistanceStats(team) {
+            let stats = {
+                '6m': { shots: 0, goals: 0 },
+                '9m': { shots: 0, goals: 0 },
+                '7m': { shots: 0, goals: 0 },
+                'campo': { shots: 0, goals: 0 }
+            };
+            
+            for (let i = 1; i <= 14; i++) {
+                matchData[team][i].forEach(action => {
+                    if (action.distance && action.result && ['gol', 'parada', 'poste-fuera'].includes(action.result)) {
+                        if (stats[action.distance]) {
+                            stats[action.distance].shots++;
+                            if (action.result === 'gol') {
+                                stats[action.distance].goals++;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            Object.keys(stats).forEach(distance => {
+                const data = stats[distance];
+                data.effectiveness = data.shots > 0 ? (data.goals / data.shots * 100).toFixed(1) : '0.0';
+            });
+            
+            return stats;
+        }
+
+        function getSituationStats(team) {
+            let stats = {
+                'igualdad': { shots: 0, goals: 0 },
+                'superioridad': { shots: 0, goals: 0 },
+                'inferioridad': { shots: 0, goals: 0 }
+            };
+            
+            for (let i = 1; i <= 14; i++) {
+                matchData[team][i].forEach(action => {
+                    if (action.situation && action.result && ['gol', 'parada', 'poste-fuera'].includes(action.result)) {
+                        if (stats[action.situation]) {
+                            stats[action.situation].shots++;
+                            if (action.result === 'gol') {
+                                stats[action.situation].goals++;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            Object.keys(stats).forEach(situation => {
+                const data = stats[situation];
+                data.effectiveness = data.shots > 0 ? (data.goals / data.shots * 100).toFixed(1) : '0.0';
+            });
+            
+            return stats;
+        }
+
+        function getLineStats(team) {
+            let stats = {};
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(line => {
+                stats[line] = { shots: 0, goals: 0 };
+            });
+            
+            for (let i = 1; i <= 14; i++) {
+                matchData[team][i].forEach(action => {
+                    if (action.line && action.result && ['gol', 'parada', 'poste-fuera'].includes(action.result)) {
+                        if (stats[action.line]) {
+                            stats[action.line].shots++;
+                            if (action.result === 'gol') {
+                                stats[action.line].goals++;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            Object.keys(stats).forEach(line => {
+                const data = stats[line];
+                data.effectiveness = data.shots > 0 ? (data.goals / data.shots * 100).toFixed(1) : '0.0';
+            });
+            
+            return stats;
+        }
+
+        // Función principal para generar el informe
+        function showReport() {
+            const modal = document.getElementById('reportModal');
+            const content = document.getElementById('reportContent');
+            const matchInfo = document.getElementById('matchInfo');
+            const matchDetails = document.getElementById('matchDetails');
+            const reportDate = document.getElementById('reportDate');
+            
+            // Actualizar información del partido
+            matchInfo.textContent = `${teamNames.home} ${scores.home} - ${scores.away} ${teamNames.away}`;
+            matchDetails.innerHTML = `Tiempo: ${document.getElementById('matchTime').textContent} - ${document.getElementById('period').textContent} | Modo: ${timeTrackingEnabled ? 'CON TIEMPO' : 'SIN TIEMPO'} | Generado el <span id="reportDate">${new Date().toLocaleString()}</span>`;
+            reportDate.textContent = new Date().toLocaleString();
+            
+            // Generar contenido del informe
+            content.innerHTML = generateCompleteReport();
+            
+            modal.style.display = 'block';
+        }
+
+        function generateCompleteReport() {
+            const homeStats = calculateTeamStats('home');
+            const awayStats = calculateTeamStats('away');
+            const homeEvents = getTeamEventStats('home');
+            const awayEvents = getTeamEventStats('away');
+            const homeDistance = getDistanceStats('home');
+            const awayDistance = getDistanceStats('away');
+            const homeSituation = getSituationStats('home');
+            const awaySituation = getSituationStats('away');
+            const homeLine = getLineStats('home');
+            const awayLine = getLineStats('away');
+            const mvp = getMVP();
+            
+            let html = `
+                <div class="section">
+                    <h2 class="section-title">1. Resumen Comparativo del Partido</h2>
+                    ${timeTrackingEnabled ? '' : '<p><em>Informe generado en modo "SIN TIEMPO" - Los datos de tiempo de juego no están disponibles.</em></p>'}
+                    <div class="comparison-card">
+                        <div class="team-card home">
+                            <h3>${teamNames.home}</h3>
+                            <div class="stat-grid">
+                                <div class="stat-item">
+                                    <span class="stat-number">${scores.home}</span>
+                                    <div class="stat-label">Goles</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeStats.shots}</span>
+                                    <div class="stat-label">Lanzamientos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeStats.effectiveness}%</span>
+                                    <div class="stat-label">Efectividad</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${timeTrackingEnabled ? activePlayers.home.size : 'N/A'}</span>
+                                    <div class="stat-label">Jugadores Activos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${Object.values(freeThrowStats.home).reduce((a, b) => a + b, 0)}</span>
+                                    <div class="stat-label">G. Francos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${fieldShotStats.home}</span>
+                                    <div class="stat-label">Lanz. Campo</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${timeoutData.home.length}</span>
+                                    <div class="stat-label">Time Outs</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeStats.attackTypes.contraataque.shots > 0 ? ((homeStats.attackTypes.contraataque.goals / homeStats.attackTypes.contraataque.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Contra</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeStats.attackTypes.posicional.shots > 0 ? ((homeStats.attackTypes.posicional.goals / homeStats.attackTypes.posicional.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Posic.</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeStats.attackTypes.campo.shots > 0 ? ((homeStats.attackTypes.campo.goals / homeStats.attackTypes.campo.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Campo</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeEvents.perdida}</span>
+                                    <div class="stat-label">Pérdidas</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeEvents.pasos}</span>
+                                    <div class="stat-label">Pasos/Dobles</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeEvents.linea}</span>
+                                    <div class="stat-label">Pisar Línea</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${homeEvents.exclusion}</span>
+                                    <div class="stat-label">Exclusiones</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="vs-divider">VS</div>
+                        
+                        <div class="team-card away">
+                            <h3>${teamNames.away}</h3>
+                            <div class="stat-grid">
+                                <div class="stat-item">
+                                    <span class="stat-number">${scores.away}</span>
+                                    <div class="stat-label">Goles</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayStats.shots}</span>
+                                    <div class="stat-label">Lanzamientos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayStats.effectiveness}%</span>
+                                    <div class="stat-label">Efectividad</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${timeTrackingEnabled ? activePlayers.away.size : 'N/A'}</span>
+                                    <div class="stat-label">Jugadores Activos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${Object.values(freeThrowStats.away).reduce((a, b) => a + b, 0)}</span>
+                                    <div class="stat-label">G. Francos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${fieldShotStats.away}</span>
+                                    <div class="stat-label">Lanz. Campo</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${timeoutData.away.length}</span>
+                                    <div class="stat-label">Time Outs</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayStats.attackTypes.contraataque.shots > 0 ? ((awayStats.attackTypes.contraataque.goals / awayStats.attackTypes.contraataque.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Contra</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayStats.attackTypes.posicional.shots > 0 ? ((awayStats.attackTypes.posicional.goals / awayStats.attackTypes.posicional.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Posic.</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayStats.attackTypes.campo.shots > 0 ? ((awayStats.attackTypes.campo.goals / awayStats.attackTypes.campo.shots) * 100).toFixed(1) : '0.0'}%</span>
+                                    <div class="stat-label">Efic. Campo</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayEvents.perdida}</span>
+                                    <div class="stat-label">Pérdidas</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayEvents.pasos}</span>
+                                    <div class="stat-label">Pasos/Dobles</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayEvents.linea}</span>
+                                    <div class="stat-label">Pisar Línea</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${awayEvents.exclusion}</span>
+                                    <div class="stat-label">Exclusiones</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">2. Golpes Francos Recibidos por Zona</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Zona</th>
+                                <th>${teamNames.home}</th>
+                                <th>${teamNames.away}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${['A', 'B', 'C', 'D', 'E', 'F'].map(zone => `
+                                <tr>
+                                    <td><strong>Línea ${zone}</strong></td>
+                                    <td class="number">${freeThrowStats.home[zone]}</td>
+                                    <td class="number">${freeThrowStats.away[zone]}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">3. Comparativa por Distancia</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Distancia</th>
+                                <th colspan="3">${teamNames.home}</th>
+                                <th colspan="3">${teamNames.away}</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(homeDistance).map(distance => `
+                                <tr>
+                                    <td><strong>${distance}</strong></td>
+                                    <td class="number">${homeDistance[distance].shots}</td>
+                                    <td class="number">${homeDistance[distance].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(homeDistance[distance].effectiveness)}">${homeDistance[distance].effectiveness}%</td>
+                                    <td class="number">${awayDistance[distance].shots}</td>
+                                    <td class="number">${awayDistance[distance].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(awayDistance[distance].effectiveness)}">${awayDistance[distance].effectiveness}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">4. Comparativa por Situaciones Numéricas</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Situación</th>
+                                <th colspan="3">${teamNames.home}</th>
+                                <th colspan="3">${teamNames.away}</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(homeSituation).map(situation => `
+                                <tr>
+                                    <td><strong>${situation.charAt(0).toUpperCase() + situation.slice(1)}</strong></td>
+                                    <td class="number">${homeSituation[situation].shots}</td>
+                                    <td class="number">${homeSituation[situation].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(homeSituation[situation].effectiveness)}">${homeSituation[situation].effectiveness}%</td>
+                                    <td class="number">${awaySituation[situation].shots}</td>
+                                    <td class="number">${awaySituation[situation].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(awaySituation[situation].effectiveness)}">${awaySituation[situation].effectiveness}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">5. Cronografía del Partido</h2>
+                    <div class="timeline-chart">
+                        ${scoreHistory.length > 0 ? scoreHistory.map(event => `
+                            <div class="timeline-item">
+                                <div class="timeline-time">${event.time}</div>
+                                <div class="timeline-score">${event.homeScore}-${event.awayScore}</div>
+                                <div class="timeline-action">GOL - ${teamNames[event.scorer]}</div>
+                            </div>
+                        `).join('') : '<p>No hay eventos de gol registrados.</p>'}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">6. Comparativa por Líneas</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Línea</th>
+                                <th colspan="3">${teamNames.home}</th>
+                                <th colspan="3">${teamNames.away}</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                                <th>Lanz.</th>
+                                <th>Goles</th>
+                                <th>Eficacia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(homeLine).map(line => `
+                                <tr>
+                                    <td><strong>Línea ${line}</strong></td>
+                                    <td class="number">${homeLine[line].shots}</td>
+                                    <td class="number">${homeLine[line].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(homeLine[line].effectiveness)}">${homeLine[line].effectiveness}%</td>
+                                    <td class="number">${awayLine[line].shots}</td>
+                                    <td class="number">${awayLine[line].goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(awayLine[line].effectiveness)}">${awayLine[line].effectiveness}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">7. MVP del Partido</h2>
+                    ${mvp ? `
+                        <div class="team-card ${mvp.team}">
+                            <h3>${mvp.name} - ${mvp.teamName}</h3>
+                            <div class="stat-grid">
+                                <div class="stat-item">
+                                    <span class="stat-number">${mvp.stats.goals}</span>
+                                    <div class="stat-label">Goles</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${mvp.stats.shots}</span>
+                                    <div class="stat-label">Lanzamientos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${mvp.stats.effectiveness}%</span>
+                                    <div class="stat-label">Efectividad</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${mvp.stats.playtime}</span>
+                                    <div class="stat-label">Tiempo Juego</div>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${mvp.rating.toFixed(1)}</span>
+                                    <div class="stat-label">Valoración</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : '<p>No hay suficientes datos para determinar el MVP.</p>'}
+                </div>
+
+                <div class="page-break"></div>
+
+                <div class="section">
+                    <h2 class="section-title">8. Datos Detallados - ${teamNames.home}</h2>
+                    ${generateTeamDetailedStats('home')}
+                </div>
+
+                <div class="page-break"></div>
+
+                <div class="section">
+                    <h2 class="section-title">9. Datos Detallados - ${teamNames.away}</h2>
+                    ${generateTeamDetailedStats('away')}
+                </div>
+            `;
+            
+            return html;
+        }
+
+        function generateTeamDetailedStats(team) {
+            let html = `
+                <div class="subsection-title">Jugadores</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Jugador</th>
+                            <th>Lanz.</th>
+                            <th>Eficacia</th>
+                            <th>Goles</th>
+                            <th>Tiempo</th>
+                            <th>G.Francos</th>
+                            <th>L.Campo</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            for (let i = 1; i <= 14; i++) {
+                if (matchData[team][i].length > 0) {
+                    const stats = getPlayerStats(team, i);
+                    html += `
+                        <tr>
+                            <td><strong>${playerNames[team][i]}</strong></td>
+                            <td class="number">${stats.shots}</td>
+                            <td class="percentage ${getEffectivenessClass(stats.effectiveness)}">${stats.effectiveness}%</td>
+                            <td class="number">${stats.goals}</td>
+                            <td class="number">${stats.playtime}</td>
+                            <td class="number">${stats.freeThrows}</td>
+                            <td class="number">${stats.fieldShots}</td>
+                            <td class="number">${stats.rating}</td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Agregar estadísticas detalladas por jugador
+            for (let i = 1; i <= 14; i++) {
+                if (matchData[team][i].length > 0) {
+                    const stats = getPlayerStats(team, i);
+                    html += generatePlayerDetailedStats(team, i, stats);
+                }
+            }
+            
+            // Estadísticas de porteros
+            html += `
+                <div class="subsection-title">Porteros</div>
+                ${generateGoalkeeperStats(team)}
+            `;
+            
+            return html;
+        }
+
+        function generatePlayerDetailedStats(team, player, stats) {
+            return `
+                <div class="subsection-title">${playerNames[team][player]} - Estadísticas Detalladas</div>
+                
+                <h4>Estadísticas por Zona (A-F)</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Zona</th>
+                            <th>Lanzamientos</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.zoneStats).map(zone => `
+                            <tr>
+                                <td><strong>Línea ${zone}</strong></td>
+                                <td class="number">${stats.zoneStats[zone].shots}</td>
+                                <td class="number">${stats.zoneStats[zone].goals}</td>
+                                <td class="percentage ${getEffectivenessClass(stats.zoneStats[zone].effectiveness)}">${stats.zoneStats[zone].effectiveness}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Cuadrantes de Portería</h4>
+                <div class="goal-grid-visual">
+                    ${[1,2,3,4,5,6,7,8,9].map(zone => `
+                        <div class="goal-zone-visual ${stats.goalZoneStats[zone].shots > 0 ? 'active' : ''}">
+                            ${zone}<br>
+                            <small>${stats.goalZoneStats[zone].goals}/${stats.goalZoneStats[zone].shots}</small>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h4>Eventos Especiales</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Evento</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Pérdidas</td><td class="number">${stats.events.perdida}</td></tr>
+                        <tr><td>Pasos/Dobles</td><td class="number">${stats.events.pasos}</td></tr>
+                        <tr><td>Pisar Línea</td><td class="number">${stats.events.linea}</td></tr>
+                        <tr><td>Exclusiones</td><td class="number">${stats.events.exclusion}</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Tipos de Lanzamiento</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Lanzamientos</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.shotTypeStats).map(type => `
+                            <tr>
+                                <td><strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong></td>
+                                <td class="number">${stats.shotTypeStats[type].shots}</td>
+                                <td class="number">${stats.shotTypeStats[type].goals}</td>
+                                <td class="percentage ${getEffectivenessClass(stats.shotTypeStats[type].effectiveness)}">${stats.shotTypeStats[type].effectiveness}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Tipos de Ataque</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Lanzamientos</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.attackTypeStats).map(type => `
+                            <tr>
+                                <td><strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong></td>
+                                <td class="number">${stats.attackTypeStats[type].shots}</td>
+                                <td class="number">${stats.attackTypeStats[type].goals}</td>
+                                <td class="percentage ${getEffectivenessClass(stats.attackTypeStats[type].effectiveness)}">${stats.attackTypeStats[type].effectiveness}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Situaciones Numéricas</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Situación</th>
+                            <th>Lanzamientos</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.situationStats).map(situation => `
+                            <tr>
+                                <td><strong>${situation.charAt(0).toUpperCase() + situation.slice(1)}</strong></td>
+                                <td class="number">${stats.situationStats[situation].shots}</td>
+                                <td class="number">${stats.situationStats[situation].goals}</td>
+                                <td class="percentage ${getEffectivenessClass(stats.situationStats[situation].effectiveness)}">${stats.situationStats[situation].effectiveness}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function generateGoalkeeperStats(team) {
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Portero</th>
+                            <th>Lanz. Enfrentados</th>
+                            <th>Goles Encajados</th>
+                            <th>Paradas</th>
+                            <th>Poste/Fuera</th>
+                            <th>Eficacia</th>
+                            <th>Valoración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            ['GK1', 'GK2'].forEach(gkType => {
+                const stats = getGoalkeeperStats(team, gkType);
+                if (stats.total_faced > 0) {
+                    html += `
+                        <tr>
+                            <td><strong>${goalkeeperNames[team][gkType]}</strong></td>
+                            <td class="number">${stats.total_faced}</td>
+                            <td class="number">${stats.goals_against}</td>
+                            <td class="number">${stats.saves}</td>
+                            <td class="number">${stats.poste_fuera}</td>
+                            <td class="percentage ${getEffectivenessClass(stats.effectiveness)}">${stats.effectiveness}%</td>
+                            <td class="number">${stats.rating}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Estadísticas detalladas de porteros
+            ['GK1', 'GK2'].forEach(gkType => {
+                const stats = getGoalkeeperStats(team, gkType);
+                if (stats.total_faced > 0) {
+                    html += generateGoalkeeperDetailedStats(team, gkType, stats);
+                }
+            });
+            
+            return html;
+        }
+
+        function generateGoalkeeperDetailedStats(team, gkType, stats) {
+            return `
+                <div class="subsection-title">${goalkeeperNames[team][gkType]} - Estadísticas Detalladas</div>
+                
+                <h4>Cuadrantes de Portería</h4>
+                <div class="goal-grid-visual">
+                    ${[1,2,3,4,5,6,7,8,9].map(zone => {
+                        const zoneStats = stats.detailed.by_zone[zone];
+                        return `
+                            <div class="goal-zone-visual ${zoneStats.faced > 0 ? 'active' : ''}">
+                                ${zone}<br>
+                                <small>${zoneStats.saves}/${zoneStats.faced}</small>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <h4>Estadísticas por Distancia</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Distancia</th>
+                            <th>Enfrentados</th>
+                            <th>Paradas</th>
+                            <th>Goles</th>
+                            <th>Poste/Fuera</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.detailed.by_distance).map(distance => {
+                            const distStats = stats.detailed.by_distance[distance];
+                            const effectiveness = distStats.faced > 0 ? ((distStats.saves / distStats.faced) * 100).toFixed(1) : '0.0';
+                            return `
+                                <tr>
+                                    <td><strong>${distance}</strong></td>
+                                    <td class="number">${distStats.faced}</td>
+                                    <td class="number">${distStats.saves}</td>
+                                    <td class="number">${distStats.goals}</td>
+                                    <td class="number">${distStats.poste_fuera}</td>
+                                    <td class="percentage ${getEffectivenessClass(effectiveness)}">${effectiveness}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Estadísticas por Tipo de Lanzamiento</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Enfrentados</th>
+                            <th>Paradas</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.detailed.by_shot_type).map(type => {
+                            const typeStats = stats.detailed.by_shot_type[type];
+                            const effectiveness = typeStats.faced > 0 ? ((typeStats.saves / typeStats.faced) * 100).toFixed(1) : '0.0';
+                            return `
+                                <tr>
+                                    <td><strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong></td>
+                                    <td class="number">${typeStats.faced}</td>
+                                    <td class="number">${typeStats.saves}</td>
+                                    <td class="number">${typeStats.goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(effectiveness)}">${effectiveness}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Estadísticas por Situación Numérica</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Situación</th>
+                            <th>Enfrentados</th>
+                            <th>Paradas</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.detailed.by_situation).map(situation => {
+                            const sitStats = stats.detailed.by_situation[situation];
+                            const effectiveness = sitStats.faced > 0 ? ((sitStats.saves / sitStats.faced) * 100).toFixed(1) : '0.0';
+                            return `
+                                <tr>
+                                    <td><strong>${situation.charAt(0).toUpperCase() + situation.slice(1)}</strong></td>
+                                    <td class="number">${sitStats.faced}</td>
+                                    <td class="number">${sitStats.saves}</td>
+                                    <td class="number">${sitStats.goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(effectiveness)}">${effectiveness}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <h4>Estadísticas por Tipo de Ataque</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Enfrentados</th>
+                            <th>Paradas</th>
+                            <th>Goles</th>
+                            <th>Eficacia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(stats.detailed.by_attack_type).map(attackType => {
+                            const attackStats = stats.detailed.by_attack_type[attackType];
+                            const effectiveness = attackStats.faced > 0 ? ((attackStats.saves / attackStats.faced) * 100).toFixed(1) : '0.0';
+                            return `
+                                <tr>
+                                    <td><strong>${attackType.charAt(0).toUpperCase() + attackType.slice(1)}</strong></td>
+                                    <td class="number">${attackStats.faced}</td>
+                                    <td class="number">${attackStats.saves}</td>
+                                    <td class="number">${attackStats.goals}</td>
+                                    <td class="percentage ${getEffectivenessClass(effectiveness)}">${effectiveness}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function getEffectivenessClass(effectiveness) {
+            const eff = parseFloat(effectiveness);
+            if (eff >= 70) return 'excellent';
+            if (eff >= 50) return 'good';
+            if (eff >= 30) return 'average';
+            return 'poor';
+        }
+
+        function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('reportModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Verificar autenticación al cargar la página
+        window.addEventListener('load', checkAuthentication);
+    </script>
+</body>
+</html>
